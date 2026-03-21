@@ -10,6 +10,7 @@ Edita [`.env`](/C:/Users/ederf/OneDrive/Documentos/New%20project/arepas-pos/.env
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DBNAME?schema=public"
 DIRECT_URL="postgresql://USER:PASSWORD@HOST:PORT/DBNAME?schema=public"
 JWT_SECRET="un-secreto-largo-y-seguro"
+BLOB_READ_WRITE_TOKEN="token-opcional-para-subida-de-imagenes-en-vercel"
 NODE_ENV="development"
 ```
 
@@ -19,6 +20,7 @@ Para Neon o Supabase:
 
 - `DATABASE_URL`: conexión usada por la app
 - `DIRECT_URL`: conexión directa usada por Prisma para migraciones
+- `BLOB_READ_WRITE_TOKEN`: requerido en Vercel si quieres subir imágenes desde el panel admin
 
 ## 2. Comandos principales
 
