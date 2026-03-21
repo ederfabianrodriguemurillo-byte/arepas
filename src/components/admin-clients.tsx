@@ -79,6 +79,41 @@ function toDateKey(value: string | Date) {
   return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
 }
 
+async function optimizeImageBeforeUpload(file: File) {
+  if (typeof window === "undefined" || file.size <= 2_000_000) {
+    return file;
+  }
+
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const context = canvas.getContext("2d");
+  if (!context) {
+    bitmap.close();
+    return file;
+  }
+
+  context.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, "image/webp", 0.82);
+  });
+
+  if (!blob) {
+    return file;
+  }
+
+  const baseName = file.name.replace(/\.[^.]+$/, "") || "producto";
+  return new File([blob], `${baseName}.webp`, { type: "image/webp" });
+}
+
 async function request(url: string, options: RequestInit = {}) {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
@@ -90,6 +125,16 @@ async function request(url: string, options: RequestInit = {}) {
       throw new Error(result.error || "No se pudo completar la operación.");
     }
     return result;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("La solicitud tardó demasiado. Intenta de nuevo.");
+    }
+
+    if (error instanceof TypeError) {
+      throw new Error("No se pudo conectar con el servidor. Si la imagen es muy pesada, intenta con una más liviana.");
+    }
+
+    throw error;
   } finally {
     window.clearTimeout(timeout);
   }
@@ -256,9 +301,10 @@ export function ProductsClient({
     }
     setUploading(true);
     setError("");
-    const data = new FormData();
-    data.append("file", file);
     try {
+      const optimizedFile = await optimizeImageBeforeUpload(file);
+      const data = new FormData();
+      data.append("file", optimizedFile);
       const result = await request("/api/upload", { method: "POST", body: data });
       setForm((current) => ({ ...current, imagenUrl: result.url }));
       setPreview(result.url);
