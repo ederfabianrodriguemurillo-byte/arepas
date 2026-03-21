@@ -79,6 +79,10 @@ function toDateKey(value: string | Date) {
   return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
 }
 
+function isRemoteImage(url: string | null) {
+  return Boolean(url && /^https?:\/\//i.test(url));
+}
+
 async function optimizeImageBeforeUpload(file: File) {
   if (typeof window === "undefined" || file.size <= 2_000_000) {
     return file;
@@ -387,7 +391,14 @@ export function ProductsClient({
             {filtered.map((product) => (
               <div key={product.id} className="grid gap-3 rounded-2xl border border-stone-800 p-4 md:grid-cols-[80px_1fr_auto] md:items-center">
                 <div className="relative h-20 w-20 overflow-hidden rounded-2xl bg-stone-950">
-                  <Image src={product.imagenUrl || "/placeholder-food.svg"} alt={product.nombre} fill className="object-cover" sizes="80px" />
+                  <Image
+                    src={product.imagenUrl || "/placeholder-food.svg"}
+                    alt={product.nombre}
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                    unoptimized={isRemoteImage(product.imagenUrl)}
+                  />
                 </div>
                 <div>
                   <p className="font-semibold text-stone-100">{product.nombre}</p>
@@ -431,7 +442,14 @@ export function ProductsClient({
           </label>
           {preview ? (
             <div className="relative mt-4 h-40 overflow-hidden rounded-2xl bg-stone-950">
-              <Image src={preview} alt="Vista previa" fill className="object-cover" sizes="320px" />
+              <Image
+                src={preview}
+                alt="Vista previa"
+                fill
+                className="object-cover"
+                sizes="320px"
+                unoptimized={isRemoteImage(preview)}
+              />
             </div>
           ) : null}
         </div>

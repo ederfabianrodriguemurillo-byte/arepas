@@ -66,6 +66,10 @@ const paymentOptions = [
   { value: "CARD", label: "Tarjeta", icon: CreditCard },
 ] as const;
 
+function isRemoteImage(url: string | null) {
+  return Boolean(url && /^https?:\/\//i.test(url));
+}
+
 export function PosClient({
   settings,
   categories,
@@ -272,6 +276,7 @@ export function PosClient({
                       fill
                       className="object-cover transition duration-300 group-hover:scale-105"
                       sizes="(max-width: 1024px) 100vw, 33vw"
+                      unoptimized={isRemoteImage(product.imagenUrl)}
                     />
                   </div>
                   <div className="space-y-2 p-4">
