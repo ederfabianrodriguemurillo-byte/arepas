@@ -23,6 +23,10 @@ export type PrintableSale = {
   }>;
 };
 
+function separator() {
+  return "--------------------------------";
+}
+
 export function TicketPrintSheet({
   sale,
   settings,
@@ -48,7 +52,7 @@ export function TicketPrintSheet({
       requestAnimationFrame(() => {
         window.print();
       });
-    }, 250);
+    }, 300);
 
     return () => window.clearTimeout(timeout);
   }, [autoPrint, sale]);
@@ -58,61 +62,76 @@ export function TicketPrintSheet({
   }
 
   return (
-    <div className="print-only-container">
-      <div ref={printableRef} className="ticket-sheet bg-white p-2 text-[10px] text-black">
-        <div className="text-center">
-          <p className="text-[13px] font-bold">{settings.nombreNegocio}</p>
+    <div className="print-only-container" aria-hidden="true">
+      <div ref={printableRef} className="ticket print-ticket">
+        <header className="ticket-center">
+          <p className="ticket-business-name">{settings.nombreNegocio}</p>
           <p>{settings.direccion}</p>
           <p>{settings.telefono}</p>
-        </div>
-        <div className="mt-2 border-t border-dashed border-black pt-2">
-          <p>Venta #{sale.numeroVenta}</p>
+        </header>
+
+        <p className="ticket-divider">{separator()}</p>
+
+        <section className="ticket-block">
+          <div className="ticket-row">
+            <span>Venta</span>
+            <span>#{sale.numeroVenta}</span>
+          </div>
           <p>{formatDateTime(sale.fecha)}</p>
           <p>Cajero: {sale.cajero.nombre}</p>
-        </div>
-        <div className="mt-2 border-t border-dashed border-black pt-2">
+        </section>
+
+        <p className="ticket-divider">{separator()}</p>
+
+        <section className="ticket-block">
           {sale.items.map((item) => (
-            <div key={item.id} className="mb-1">
-              <div className="flex justify-between gap-2">
-                <p className="flex-1">
+            <div key={item.id} className="ticket-item">
+              <div className="ticket-row ticket-item-main">
+                <span className="ticket-item-name">
                   {item.cantidad} x {item.nombreProducto}
                   {item.nombreVariante ? ` (${item.nombreVariante})` : ""}
-                </p>
-                <p>{formatCop(item.totalLinea)}</p>
+                </span>
+                <span className="ticket-item-price">{formatCop(item.totalLinea)}</span>
               </div>
-              {item.observacion ? <p>Obs: {item.observacion}</p> : null}
+              {item.observacion ? <p className="ticket-note">Obs: {item.observacion}</p> : null}
             </div>
           ))}
-        </div>
-        <div className="mt-2 border-t border-dashed border-black pt-2">
-          <div className="flex justify-between">
+        </section>
+
+        <p className="ticket-divider">{separator()}</p>
+
+        <section className="ticket-block">
+          <div className="ticket-row">
             <span>Subtotal</span>
             <span>{formatCop(sale.subtotal)}</span>
           </div>
-          <div className="flex justify-between font-bold">
+          <div className="ticket-row ticket-total">
             <span>Total</span>
             <span>{formatCop(sale.total)}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="ticket-row">
             <span>Pago</span>
             <span>{paymentMethodLabel(sale.metodoPago)}</span>
           </div>
-          {sale.montoRecibido ? (
-            <div className="flex justify-between">
+          {sale.montoRecibido !== null ? (
+            <div className="ticket-row">
               <span>Recibido</span>
               <span>{formatCop(sale.montoRecibido)}</span>
             </div>
           ) : null}
-          {sale.cambio ? (
-            <div className="flex justify-between">
+          {sale.cambio !== null ? (
+            <div className="ticket-row">
               <span>Cambio</span>
               <span>{formatCop(sale.cambio)}</span>
             </div>
           ) : null}
-        </div>
-        <div className="mt-2 border-t border-dashed border-black pt-2 text-center">
+        </section>
+
+        <p className="ticket-divider">{separator()}</p>
+
+        <footer className="ticket-center ticket-block">
           <p>{settings.mensajeTicket}</p>
-        </div>
+        </footer>
       </div>
     </div>
   );
