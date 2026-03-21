@@ -7,7 +7,7 @@ import { CircleUserRound, CreditCard, Landmark, Minus, Plus, Receipt, Search, Sh
 import { Banner, Button, Card, EmptyState, Input } from "@/components/ui";
 import { formatCop } from "@/lib/format";
 import { REQUEST_TIMEOUT } from "@/lib/constants";
-import { TicketPrintSheet, type PrintableSale } from "@/components/ticket-print-sheet";
+import { TicketPrintSheet, printSaleTicket, type PrintableSale } from "@/components/ticket-print-sheet";
 import { CashShiftPanel } from "@/components/cash-shift-panel";
 
 type Variant = { id: string; nombreVariante: string; precio: number };
@@ -488,7 +488,7 @@ export function PosClient({
           <Banner tone="success">
             Venta #{successSale.numeroVenta} registrada correctamente.
             <div className="mt-3 flex gap-2">
-              <Button className="px-3 py-2 text-xs" onClick={() => window.print()}>
+              <Button className="px-3 py-2 text-xs" onClick={() => successSale ? printSaleTicket(successSale, settings) : null}>
                 Imprimir
               </Button>
               <Button className="px-3 py-2 text-xs" variant="ghost" onClick={() => setSuccessSale(null)}>
