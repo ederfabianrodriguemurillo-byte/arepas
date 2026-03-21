@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  PRINCIPAL_ADMIN
+  SECONDARY_ADMIN
+  CASHIER
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+}
+
+enum CashMovementType {
+  INCOME
+  EXPENSE
+  WITHDRAWAL
+  ADJUSTMENT
+}
+
+enum CashShiftStatus {
+  OPEN
+  CLOSED
+  CLOSED_WITH_DIFFERENCE
+  PENDING_REVIEW
+}
+
+model User {
+  id           String   @id @default(cuid())
+  nombre       String
+  email        String   @unique
+  passwordHash String
+  rol          Role
+  activo       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  sales        Sale[]
+  cashShifts    CashShift[]
+  cashMovements CashMovement[] @relation("CashMovementCreatedBy")
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  nombre    String    @unique
+  activa    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+}
+
+model Product {
+  id          String           @id @default(cuid())
+  nombre      String
+  descripcion String?
+  precio      Int?
+  imagenUrl   String?
+  stock       Int             @default(0)
+  activo      Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  categoriaId String
+  categoria   Category        @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  variants    ProductVariant[]
+  saleItems   SaleItem[]
+}
+
+model ProductVariant {
+  id             String    @id @default(cuid())
+  productId      String
+  nombreVariante String
+  precio         Int
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  product        Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  saleItems      SaleItem[]
+}
+
+model Sale {
+  id            String        @id @default(cuid())
+  numeroVenta   Int           @unique
+  fecha         DateTime      @default(now())
+  subtotal      Int
+  total         Int
+  metodoPago    PaymentMethod
+  montoRecibido Int?
+  cambio        Int?
+  cajeroId      String
+  shiftId       String?
+  createdAt     DateTime      @default(now())
+  items         SaleItem[]
+  cajero        User          @relation(fields: [cajeroId], references: [id], onDelete: Restrict)
+  shift         CashShift?    @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+}
+
+model SaleItem {
+  id               String          @id @default(cuid())
+  saleId           String
+  productId        String
+  variantId        String?
+  nombreProducto   String
+  nombreVariante   String?
+  precioUnitario   Int
+  cantidad         Int
+  observacion      String?
+  totalLinea       Int
+  sale             Sale            @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product          Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
+  variant          ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+}
+
+model BusinessSettings {
+  id             String   @id @default(cuid())
+  nombreNegocio  String
+  direccion      String
+  telefono       String
+  mensajeTicket  String
+  moneda         String   @default("COP")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model CashShift {
+  id                    String          @id @default(cuid())
+  userId                String
+  openedAt              DateTime        @default(now())
+  closedAt              DateTime?
+  openingAmount         Int
+  closingAmountExpected Int?
+  closingAmountCounted  Int?
+  deliveredAmount       Int?
+  difference            Int?
+  status                CashShiftStatus @default(OPEN)
+  receivedBy            String?
+  notes                 String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  user                  User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  movements             CashMovement[]
+  sales                 Sale[]
+}
+
+model CashMovement {
+  id          String           @id @default(cuid())
+  shiftId     String
+  type        CashMovementType
+  amount      Int
+  description String
+  createdAt   DateTime         @default(now())
+  createdById String
+  shift       CashShift        @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  createdBy   User             @relation("CashMovementCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+}
