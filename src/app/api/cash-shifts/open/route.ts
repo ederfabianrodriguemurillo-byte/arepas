@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
-import { getOpenShiftForUser } from "@/lib/cash-shifts";
+import { getOpenShiftForUser, summarizeShift } from "@/lib/cash-shifts";
 import { prisma } from "@/lib/prisma";
 import { cashShiftOpenSchema } from "@/lib/schemas";
 
@@ -13,14 +13,15 @@ export async function POST(request: Request) {
     }
 
     const payload = cashShiftOpenSchema.parse(await request.json());
-    const shift = await prisma.cashShift.create({
+    await prisma.cashShift.create({
       data: {
         userId: user.id,
         openingAmount: payload.openingAmount,
       },
     });
 
-    return NextResponse.json({ shift });
+    const shift = await getOpenShiftForUser(user.id);
+    return NextResponse.json({ shift, summary: shift ? summarizeShift(shift) : null });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "No se pudo abrir el turno." }, { status: 400 });
   }

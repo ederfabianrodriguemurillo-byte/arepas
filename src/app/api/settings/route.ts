@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
+import { revalidateSettings } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { settingsSchema } from "@/lib/schemas";
 
@@ -13,6 +14,7 @@ export async function PATCH(request: Request) {
       ? await prisma.businessSettings.update({ where: { id: current.id }, data: payload })
       : await prisma.businessSettings.create({ data: payload });
 
+    revalidateSettings();
     return NextResponse.json({ settings });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "No se pudo guardar la configuración." }, { status: 400 });

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
+import { getOpenShiftForUser, summarizeShift } from "@/lib/cash-shifts";
 import { prisma } from "@/lib/prisma";
 import { cashMovementSchema } from "@/lib/schemas";
 
@@ -16,7 +17,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     const payload = cashMovementSchema.parse(await request.json());
-    const movement = await prisma.cashMovement.create({
+    await prisma.cashMovement.create({
       data: {
         shiftId: id,
         type: payload.type,
@@ -26,7 +27,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       },
     });
 
-    return NextResponse.json({ movement });
+    const currentShift = await getOpenShiftForUser(shift.userId);
+    return NextResponse.json({ shift: currentShift, summary: currentShift ? summarizeShift(currentShift) : null });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "No se pudo registrar el movimiento." }, { status: 400 });
   }

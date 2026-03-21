@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
+import { revalidateCatalog } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/lib/schemas";
 
@@ -8,25 +9,28 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     await requireAdmin();
     const payload = productSchema.parse(await request.json());
     const { id } = await params;
-    await prisma.productVariant.deleteMany({ where: { productId: id } });
-    const product = await prisma.product.update({
-      where: { id },
-      data: {
-        nombre: payload.nombre,
-        descripcion: payload.descripcion || "",
-        precio: payload.precio,
-        categoriaId: payload.categoriaId,
-        imagenUrl: payload.imagenUrl || null,
-        stock: payload.stock,
-        activo: payload.activo,
-        variants: {
-          create: payload.variants.map((variant) => ({
-            nombreVariante: variant.nombreVariante,
-            precio: variant.precio,
-          })),
+    const product = await prisma.$transaction(async (tx) => {
+      await tx.productVariant.deleteMany({ where: { productId: id } });
+      return tx.product.update({
+        where: { id },
+        data: {
+          nombre: payload.nombre,
+          descripcion: payload.descripcion || "",
+          precio: payload.precio,
+          categoriaId: payload.categoriaId,
+          imagenUrl: payload.imagenUrl || null,
+          stock: payload.stock,
+          activo: payload.activo,
+          variants: {
+            create: payload.variants.map((variant) => ({
+              nombreVariante: variant.nombreVariante,
+              precio: variant.precio,
+            })),
+          },
         },
-      },
+      });
     });
+    revalidateCatalog();
     return NextResponse.json({ product });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "No se pudo actualizar el producto." }, { status: 400 });
@@ -38,6 +42,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
     await requireAdmin();
     const { id } = await params;
     await prisma.product.delete({ where: { id } });
+    revalidateCatalog();
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "No se pudo eliminar el producto." }, { status: 400 });

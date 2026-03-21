@@ -60,7 +60,7 @@ export function CashShiftPanel({
   userName: string;
   currentShift: CurrentShift | null;
   currentShiftSummary: ShiftSummary | null;
-  onShiftUpdated: () => Promise<void> | void;
+  onShiftUpdated: (payload: { shift: CurrentShift | null; summary: ShiftSummary | null }) => Promise<void> | void;
 }) {
   const [openingAmount, setOpeningAmount] = useState("");
   const [movementType, setMovementType] = useState<"INCOME" | "EXPENSE" | "WITHDRAWAL" | "ADJUSTMENT">("INCOME");
@@ -83,14 +83,14 @@ export function CashShiftPanel({
     setError("");
     setSuccess("");
     try {
-      await request("/api/cash-shifts/open", {
+      const result = await request("/api/cash-shifts/open", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ openingAmount: Number(openingAmount || 0) }),
       });
       setOpeningAmount("");
       setSuccess("Turno abierto correctamente.");
-      await onShiftUpdated();
+      await onShiftUpdated({ shift: result.shift ?? null, summary: result.summary ?? null });
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "No se pudo abrir la caja.");
     } finally {
@@ -107,7 +107,7 @@ export function CashShiftPanel({
     setError("");
     setSuccess("");
     try {
-      await request(`/api/cash-shifts/${currentShift.id}/movements`, {
+      const result = await request(`/api/cash-shifts/${currentShift.id}/movements`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -119,7 +119,7 @@ export function CashShiftPanel({
       setMovementAmount("");
       setMovementDescription("");
       setSuccess("Movimiento registrado.");
-      await onShiftUpdated();
+      await onShiftUpdated({ shift: result.shift ?? null, summary: result.summary ?? null });
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "No se pudo guardar el movimiento.");
     } finally {
@@ -151,7 +151,7 @@ export function CashShiftPanel({
       setReceivedBy("");
       setNotes("");
       setSuccess("Turno cerrado correctamente.");
-      await onShiftUpdated();
+      await onShiftUpdated({ shift: null, summary: null });
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "No se pudo cerrar el turno.");
     } finally {

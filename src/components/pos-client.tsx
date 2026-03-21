@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleUserRound, CreditCard, Landmark, Minus, Plus, Receipt, Search, ShieldCheck, ShoppingBasket, Trash2 } from "lucide-react";
 import { Banner, Button, Card, EmptyState, Input } from "@/components/ui";
@@ -98,6 +98,13 @@ export function PosClient({
   const [successSale, setSuccessSale] = useState<PrintableSale | null>(null);
   const [autoPrint, setAutoPrint] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const [shiftState, setShiftState] = useState(currentShift);
+  const [shiftSummaryState, setShiftSummaryState] = useState(currentShiftSummary);
+
+  useEffect(() => {
+    setShiftState(currentShift);
+    setShiftSummaryState(currentShiftSummary);
+  }, [currentShift, currentShiftSummary]);
 
   const visibleProducts = useMemo(() => {
     const base = categories.find((category) => category.id === activeCategoryId)?.products ?? [];
@@ -110,6 +117,25 @@ export function PosClient({
 
   const subtotal = cart.reduce((sum, item) => sum + item.precioUnitario * item.cantidad, 0);
   const change = paymentMethod === "CASH" ? Math.max((Number(amountReceived) || 0) - subtotal, 0) : 0;
+
+  function applySaleToShiftSummary(total: number, method: "CASH" | "TRANSFER" | "CARD") {
+    setShiftSummaryState((current) => {
+      if (!current) {
+        return current;
+      }
+
+      const next = { ...current };
+      if (method === "CASH") {
+        next.cashSales += total;
+        next.expectedCash += total;
+      } else if (method === "TRANSFER") {
+        next.transferSales += total;
+      } else {
+        next.cardSales += total;
+      }
+      return next;
+    });
+  }
 
   function addProduct(product: Product, variant?: Variant) {
     const key = `${product.id}-${variant?.id ?? "base"}`;
@@ -138,7 +164,7 @@ export function PosClient({
   }
 
   async function confirmSale() {
-    if (!currentShift) {
+    if (!shiftState) {
       setError("Debes abrir caja antes de registrar ventas.");
       return;
     }
@@ -180,6 +206,7 @@ export function PosClient({
       setAmountReceived("");
       setShowCheckout(false);
       setAutoPrint(true);
+      applySaleToShiftSummary(result.sale.total, paymentMethod);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "No fue posible registrar la venta.");
     } finally {
@@ -236,7 +263,7 @@ export function PosClient({
           </div>
 
           {logoutError ? <Banner tone="error">{logoutError}</Banner> : null}
-          {!currentShift ? (
+          {!shiftState ? (
             <Banner tone="error">No hay turno abierto. Debes abrir caja antes de vender o salir dejará el turno pendiente sin ventas.</Banner>
           ) : null}
 
@@ -300,14 +327,15 @@ export function PosClient({
           )}
 
           <div className="mt-6">
-            <CashShiftPanel
-              userName={user.nombre}
-              currentShift={currentShift}
-              currentShiftSummary={currentShiftSummary}
-              onShiftUpdated={async () => {
-                router.refresh();
-              }}
-            />
+              <CashShiftPanel
+                userName={user.nombre}
+                currentShift={shiftState}
+                currentShiftSummary={shiftSummaryState}
+                onShiftUpdated={async (payload) => {
+                  setShiftState(payload.shift);
+                  setShiftSummaryState(payload.summary);
+                }}
+              />
           </div>
         </section>
 

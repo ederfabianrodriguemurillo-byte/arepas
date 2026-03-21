@@ -4,15 +4,28 @@ import { prisma } from "@/lib/prisma";
 export async function getOpenShiftForUser(userId: string) {
   return prisma.cashShift.findFirst({
     where: { userId, closedAt: null, status: "OPEN" },
-    include: {
+    select: {
+      id: true,
+      openedAt: true,
+      openingAmount: true,
+      status: true,
       user: { select: { id: true, nombre: true, email: true, rol: true } },
       movements: {
-        include: { createdBy: { select: { nombre: true } } },
+        select: {
+          id: true,
+          type: true,
+          amount: true,
+          description: true,
+          createdAt: true,
+          createdBy: { select: { nombre: true } },
+        },
         orderBy: { createdAt: "desc" },
       },
       sales: {
-        orderBy: { createdAt: "desc" },
-        include: { cajero: { select: { nombre: true } }, items: true },
+        select: {
+          metodoPago: true,
+          total: true,
+        },
       },
     },
   });

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import { Role } from "@prisma/client";
 import { useMemo, useState, useTransition } from "react";
@@ -634,9 +635,11 @@ export function SettingsClient({ settings }: { settings: Settings }) {
 export function SalesClient({
   sales,
   settings,
+  pagination,
 }: {
   sales: Sale[];
   settings: Settings;
+  pagination: { page: number; pageCount: number };
 }) {
   const [query, setQuery] = useState("");
   const [date, setDate] = useState("");
@@ -689,6 +692,33 @@ export function SalesClient({
         ) : (
           <EmptyState title="No hay ventas para mostrar" description="Prueba otro filtro o espera a que se registren transacciones." />
         )}
+        {!query && !date && pagination.pageCount > 1 ? (
+          <div className="flex flex-col gap-3 border-t border-stone-800 pt-4 md:flex-row md:items-center md:justify-between">
+            <p className="text-sm text-stone-400">
+              Página {pagination.page} de {pagination.pageCount}
+            </p>
+            <div className="flex gap-2">
+              {pagination.page > 1 ? (
+                <Link className="inline-flex items-center justify-center rounded-2xl border border-stone-700 bg-transparent px-4 py-3 text-sm font-semibold text-stone-200 transition hover:bg-stone-900" href={`/admin/sales?page=${pagination.page - 1}`}>
+                  Anterior
+                </Link>
+              ) : (
+                <span className="inline-flex cursor-not-allowed items-center justify-center rounded-2xl border border-stone-700 px-4 py-3 text-sm font-semibold text-stone-500">
+                  Anterior
+                </span>
+              )}
+              {pagination.page < pagination.pageCount ? (
+                <Link className="inline-flex items-center justify-center rounded-2xl border border-stone-700 bg-transparent px-4 py-3 text-sm font-semibold text-stone-200 transition hover:bg-stone-900" href={`/admin/sales?page=${pagination.page + 1}`}>
+                  Siguiente
+                </Link>
+              ) : (
+                <span className="inline-flex cursor-not-allowed items-center justify-center rounded-2xl border border-stone-700 px-4 py-3 text-sm font-semibold text-stone-500">
+                  Siguiente
+                </span>
+              )}
+            </div>
+          </div>
+        ) : null}
       </Card>
       <TicketPrintSheet sale={selected} settings={settings} autoPrint={Boolean(selected)} />
     </div>

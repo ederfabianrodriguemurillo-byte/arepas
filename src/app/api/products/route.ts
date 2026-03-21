@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
+import { revalidateCatalog } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/lib/schemas";
 
@@ -24,6 +25,7 @@ export async function POST(request: Request) {
         },
       },
     });
+    revalidateCatalog();
     return NextResponse.json({ product });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "No se pudo crear el producto." }, { status: 400 });
