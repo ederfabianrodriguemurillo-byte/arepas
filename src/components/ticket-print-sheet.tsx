@@ -66,18 +66,18 @@ export function TicketPrintSheet({
       <div ref={printableRef} className="ticket print-ticket">
         <header className="ticket-center">
           <p className="ticket-business-name">{settings.nombreNegocio}</p>
-          <p>{settings.direccion}</p>
-          <p>{settings.telefono}</p>
         </header>
 
         <p className="ticket-divider">{separator()}</p>
 
         <section className="ticket-block">
+          <p>{settings.direccion}</p>
+          <p>{settings.telefono}</p>
+          <p>{formatDateTime(sale.fecha)}</p>
           <div className="ticket-row">
             <span>Venta</span>
             <span>#{sale.numeroVenta}</span>
           </div>
-          <p>{formatDateTime(sale.fecha)}</p>
           <p>Cajero: {sale.cajero.nombre}</p>
         </section>
 
