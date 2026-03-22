@@ -112,9 +112,9 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         min-width: 48mm;
         max-width: 48mm;
         margin: 0;
-        padding: 1mm;
-        font-size: 7px;
-        line-height: 1.1;
+        padding: 0.5mm;
+        font-size: 6px;
+        line-height: 1.05;
         transform: scale(1);
         zoom: 1;
       }
@@ -128,26 +128,26 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       }
 
       .ticket-business-name {
-        font-size: 9px;
+        font-size: 8px;
         font-weight: 700;
       }
 
       .ticket-divider {
-        margin: 0.8mm 0;
+        margin: 0.5mm 0;
         white-space: nowrap;
         overflow: hidden;
       }
 
       .ticket-row {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 17mm;
+        grid-template-columns: minmax(0, 1fr) 16mm;
         align-items: start;
-        column-gap: 0.5mm;
+        column-gap: 0.3mm;
         width: 100%;
       }
 
       .ticket-item {
-        margin-top: 0.8mm;
+        margin-top: 0.4mm;
       }
 
       .ticket-item:first-child {
@@ -162,7 +162,7 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       .ticket-item-price {
         white-space: nowrap;
         text-align: right;
-        font-size: 7px;
+        font-size: 6px;
       }
 
       .ticket-row-compact {
@@ -170,7 +170,7 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       }
 
       .ticket-note {
-        margin-top: 0.5mm;
+        margin-top: 0.3mm;
       }
 
       .ticket-total {
@@ -180,7 +180,7 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       .ticket-value {
         text-align: right;
         word-break: break-word;
-        font-size: 7px;
+        font-size: 6px;
         overflow-wrap: anywhere;
       }
 
