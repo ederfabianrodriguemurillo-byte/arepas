@@ -41,9 +41,49 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
   try {
     await requireAdmin();
     const { id } = await params;
-    await prisma.product.delete({ where: { id } });
+    const result = await prisma.$transaction(async (tx) => {
+      const product = await tx.product.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          activo: true,
+          _count: {
+            select: {
+              saleItems: true,
+            },
+          },
+        },
+      });
+
+      if (!product) {
+        throw new Error("El producto no existe.");
+      }
+
+      if (product._count.saleItems > 0) {
+        await tx.product.update({
+          where: { id },
+          data: {
+            activo: false,
+          },
+        });
+
+        return {
+          archived: true,
+          message: "El producto tiene ventas asociadas. Se desactivó en lugar de eliminarse.",
+        };
+      }
+
+      await tx.productVariant.deleteMany({ where: { productId: id } });
+      await tx.product.delete({ where: { id } });
+
+      return {
+        archived: false,
+        message: "Producto eliminado correctamente.",
+      };
+    });
+
     revalidateCatalog();
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "No se pudo eliminar el producto." }, { status: 400 });
   }
