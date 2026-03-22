@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { formatDateTime, paymentMethodLabel } from "@/lib/format";
+import { formatDateTime } from "@/lib/format";
 
 export type PrintableSale = {
   numeroVenta: number;
@@ -39,6 +39,17 @@ function formatTicketCop(value: number) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value)}`;
+}
+
+function paymentMethodTicketLabel(method: PrintableSale["metodoPago"]) {
+  switch (method) {
+    case "CASH":
+      return "Efectivo";
+    case "TRANSFER":
+      return "Transf.";
+    case "CARD":
+      return "Tarjeta";
+  }
 }
 
 function escapeHtml(value: string) {
@@ -102,8 +113,8 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         max-width: 48mm;
         margin: 0;
         padding: 1mm;
-        font-size: 9px;
-        line-height: 1.2;
+        font-size: 8px;
+        line-height: 1.15;
         transform: scale(1);
         zoom: 1;
       }
@@ -117,7 +128,7 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       }
 
       .ticket-business-name {
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 700;
       }
 
@@ -129,9 +140,9 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
 
       .ticket-row {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 13.5mm;
+        grid-template-columns: minmax(0, 1fr) 14.5mm;
         align-items: start;
-        column-gap: 1mm;
+        column-gap: 0.7mm;
         width: 100%;
       }
 
@@ -152,6 +163,10 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         white-space: nowrap;
         text-align: right;
         overflow: hidden;
+      }
+
+      .ticket-row-compact {
+        grid-template-columns: minmax(0, 1fr) 12.5mm;
       }
 
       .ticket-note {
@@ -210,7 +225,7 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         </div>
         <div class="ticket-row">
           <span>Pago</span>
-          <span class="ticket-value">${escapeHtml(paymentMethodLabel(sale.metodoPago))}</span>
+          <span class="ticket-value">${escapeHtml(paymentMethodTicketLabel(sale.metodoPago))}</span>
         </div>
         ${sale.montoRecibido !== null ? `
           <div class="ticket-row">
