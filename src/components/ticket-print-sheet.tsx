@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { formatCop, formatDateTime, paymentMethodLabel } from "@/lib/format";
+import { formatDateTime, paymentMethodLabel } from "@/lib/format";
 
 export type PrintableSale = {
   numeroVenta: number;
@@ -34,6 +34,13 @@ function separator() {
   return "--------------------------------";
 }
 
+function formatTicketCop(value: number) {
+  return `$${new Intl.NumberFormat("es-CO", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)}`;
+}
+
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -50,7 +57,7 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       <div class="ticket-item">
         <div class="ticket-row">
           <span class="ticket-item-name">${escapeHtml(itemName)}</span>
-          <span class="ticket-item-price">${escapeHtml(formatCop(item.totalLinea))}</span>
+          <span class="ticket-item-price">${escapeHtml(formatTicketCop(item.totalLinea))}</span>
         </div>
         ${item.observacion ? `<p class="ticket-note">Obs: ${escapeHtml(item.observacion)}</p>` : ""}
       </div>
@@ -121,10 +128,10 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       }
 
       .ticket-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1.5mm;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 13.5mm;
+        align-items: start;
+        column-gap: 1mm;
         width: 100%;
       }
 
@@ -137,15 +144,14 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       }
 
       .ticket-item-name {
-        flex: 1 1 auto;
         min-width: 0;
         word-break: break-word;
       }
 
       .ticket-item-price {
-        flex: 0 0 auto;
         white-space: nowrap;
         text-align: right;
+        overflow: hidden;
       }
 
       .ticket-note {
@@ -154,6 +160,15 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
 
       .ticket-total {
         font-weight: 700;
+      }
+
+      .ticket-value {
+        text-align: right;
+        word-break: break-word;
+      }
+
+      .ticket-money {
+        white-space: nowrap;
       }
     </style>
   </head>
@@ -171,7 +186,7 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         <p>${escapeHtml(formatDateTime(sale.fecha))}</p>
         <div class="ticket-row">
           <span>Venta</span>
-          <span>#${sale.numeroVenta}</span>
+          <span class="ticket-value">#${sale.numeroVenta}</span>
         </div>
         <p>Cajero: ${escapeHtml(sale.cajero.nombre)}</p>
       </section>
@@ -187,26 +202,26 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       <section>
         <div class="ticket-row">
           <span>Subtotal</span>
-          <span>${escapeHtml(formatCop(sale.subtotal))}</span>
+          <span class="ticket-value ticket-money">${escapeHtml(formatTicketCop(sale.subtotal))}</span>
         </div>
         <div class="ticket-row ticket-total">
           <span>Total</span>
-          <span>${escapeHtml(formatCop(sale.total))}</span>
+          <span class="ticket-value ticket-money">${escapeHtml(formatTicketCop(sale.total))}</span>
         </div>
         <div class="ticket-row">
           <span>Pago</span>
-          <span>${escapeHtml(paymentMethodLabel(sale.metodoPago))}</span>
+          <span class="ticket-value">${escapeHtml(paymentMethodLabel(sale.metodoPago))}</span>
         </div>
         ${sale.montoRecibido !== null ? `
           <div class="ticket-row">
             <span>Recibido</span>
-            <span>${escapeHtml(formatCop(sale.montoRecibido))}</span>
+            <span class="ticket-value ticket-money">${escapeHtml(formatTicketCop(sale.montoRecibido))}</span>
           </div>
         ` : ""}
         ${sale.cambio !== null ? `
           <div class="ticket-row">
             <span>Cambio</span>
-            <span>${escapeHtml(formatCop(sale.cambio))}</span>
+            <span class="ticket-value ticket-money">${escapeHtml(formatTicketCop(sale.cambio))}</span>
           </div>
         ` : ""}
       </section>
