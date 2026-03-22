@@ -44,11 +44,11 @@ function formatTicketCop(value: number) {
 function paymentMethodTicketLabel(method: PrintableSale["metodoPago"]) {
   switch (method) {
     case "CASH":
-      return "Efectivo";
+      return "Efe.";
     case "TRANSFER":
       return "Transf.";
     case "CARD":
-      return "Tarjeta";
+      return "Tarj.";
   }
 }
 
@@ -113,8 +113,8 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         max-width: 48mm;
         margin: 0;
         padding: 1mm;
-        font-size: 8px;
-        line-height: 1.15;
+        font-size: 7px;
+        line-height: 1.1;
         transform: scale(1);
         zoom: 1;
       }
@@ -128,26 +128,26 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       }
 
       .ticket-business-name {
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 700;
       }
 
       .ticket-divider {
-        margin: 1mm 0;
+        margin: 0.8mm 0;
         white-space: nowrap;
         overflow: hidden;
       }
 
       .ticket-row {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 14.5mm;
+        grid-template-columns: minmax(0, 1fr) 17mm;
         align-items: start;
-        column-gap: 0.7mm;
+        column-gap: 0.5mm;
         width: 100%;
       }
 
       .ticket-item {
-        margin-top: 1mm;
+        margin-top: 0.8mm;
       }
 
       .ticket-item:first-child {
@@ -162,7 +162,7 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       .ticket-item-price {
         white-space: nowrap;
         text-align: right;
-        overflow: hidden;
+        font-size: 7px;
       }
 
       .ticket-row-compact {
@@ -170,7 +170,7 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       }
 
       .ticket-note {
-        margin-top: 0.8mm;
+        margin-top: 0.5mm;
       }
 
       .ticket-total {
@@ -180,6 +180,8 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       .ticket-value {
         text-align: right;
         word-break: break-word;
+        font-size: 7px;
+        overflow-wrap: anywhere;
       }
 
       .ticket-money {
