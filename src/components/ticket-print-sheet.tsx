@@ -113,10 +113,12 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         -webkit-text-size-adjust: 100%;
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
+        text-rendering: geometricPrecision;
       }
 
       body {
         font-family: "Courier New", monospace;
+        font-weight: 800;
       }
 
       .ticket {
@@ -128,6 +130,7 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         font-size: 10px;
         line-height: 1.12;
         box-sizing: border-box;
+        font-weight: 800;
       }
 
       p {
@@ -141,12 +144,13 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
 
       .ticket-business-name {
         font-size: 10px;
-        font-weight: 700;
+        font-weight: 900;
       }
 
       .ticket-phone,
       .ticket-date {
         font-size: 9px;
+        font-weight: 800;
       }
 
       .ticket-divider {
@@ -154,7 +158,7 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         margin: 1mm 0 0.6mm;
         font-family: "Courier New", Consolas, monospace;
         font-size: 10px;
-        font-weight: 700;
+        font-weight: 900;
         letter-spacing: -0.1px;
         white-space: nowrap;
         overflow: hidden;
@@ -181,6 +185,7 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         white-space: nowrap;
         text-align: right;
         justify-self: end;
+        font-weight: 900;
       }
 
       .ticket-item {
@@ -195,10 +200,11 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         margin-top: 0.2mm;
         padding-left: 1.5mm;
         font-size: 9px;
+        font-weight: 800;
       }
 
       .ticket-total {
-        font-weight: 700;
+        font-weight: 900;
       }
     </style>
   </head>
