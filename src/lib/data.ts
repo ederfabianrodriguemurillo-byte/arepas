@@ -135,6 +135,7 @@ const cachedAdminCategories = unstable_cache(
 const cachedAdminProducts = unstable_cache(
   async () =>
     prisma.product.findMany({
+      where: { activo: true },
       orderBy: { nombre: "asc" },
       select: productAdminSelect,
     }),

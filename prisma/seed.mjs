@@ -197,38 +197,25 @@ async function main() {
   const categories = await prisma.category.findMany();
   const categoryMap = Object.fromEntries(categories.map((category) => [category.nombre, category.id]));
 
+  const existingProductsCount = await prisma.product.count();
+  if (existingProductsCount > 0) {
+    return;
+  }
+
   for (const [categoryName, items] of Object.entries(products)) {
     for (const item of items) {
-      const existing = await prisma.product.findFirst({
-        where: {
+      const product = await prisma.product.create({
+        data: {
           nombre: item.nombre,
+          descripcion: "",
+          precio: "precio" in item ? item.precio : null,
+          stock: 0,
+          activo: true,
           categoriaId: categoryMap[categoryName],
         },
       });
 
-      const product = existing
-        ? await prisma.product.update({
-            where: { id: existing.id },
-            data: {
-              descripcion: existing.descripcion ?? "",
-              precio: "precio" in item ? item.precio : null,
-              stock: existing.stock ?? 0,
-              activo: true,
-            },
-          })
-        : await prisma.product.create({
-            data: {
-              nombre: item.nombre,
-              descripcion: "",
-              precio: "precio" in item ? item.precio : null,
-              stock: 0,
-              activo: true,
-              categoriaId: categoryMap[categoryName],
-            },
-          });
-
       if ("variants" in item) {
-        await prisma.productVariant.deleteMany({ where: { productId: product.id } });
         await prisma.productVariant.createMany({
           data: item.variants.map((variant) => ({
             productId: product.id,
