@@ -30,14 +30,17 @@ type TicketSettings = {
   mensajeTicket: string;
 };
 
-const TICKET_LINE_WIDTH = 32;
+const TICKET_LINE_WIDTH = 28;
 
 function separator() {
   return "-".repeat(TICKET_LINE_WIDTH);
 }
 
 function formatTicketCop(value: number) {
-  return `$${value}`;
+  return `$${new Intl.NumberFormat("es-CO", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)}`;
 }
 
 function paymentMethodTicketLabel(method: PrintableSale["metodoPago"]) {
@@ -102,7 +105,7 @@ function wrapLine(value: string, width = TICKET_LINE_WIDTH) {
   return lines;
 }
 
-function formatKeyValueLine(label: string, value: string, valueWidth = 8) {
+function formatKeyValueLine(label: string, value: string, valueWidth = 9) {
   const safeValue = value.trim();
   const safeLabel = label.trim();
   const labelWidth = Math.max(1, TICKET_LINE_WIDTH - valueWidth - 1);
@@ -123,7 +126,7 @@ function formatKeyValueLine(label: string, value: string, valueWidth = 8) {
 function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
   const itemLines = sale.items.flatMap((item) => {
     const itemName = `${item.cantidad} x ${item.nombreProducto}${item.nombreVariante ? ` (${item.nombreVariante})` : ""}`;
-    const lines = formatKeyValueLine(itemName, formatTicketCop(item.totalLinea), 8);
+    const lines = formatKeyValueLine(itemName, formatTicketCop(item.totalLinea), 9);
 
     if (item.observacion) {
       lines.push(...wrapLine(`Obs: ${item.observacion}`, TICKET_LINE_WIDTH));
@@ -137,16 +140,16 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
     ...wrapLine(settings.direccion, TICKET_LINE_WIDTH),
     ...wrapLine(settings.telefono, TICKET_LINE_WIDTH),
     ...wrapLine(formatDateTime(sale.fecha), TICKET_LINE_WIDTH),
-    ...formatKeyValueLine("Venta", `#${sale.numeroVenta}`, 8),
+    ...formatKeyValueLine("Venta", `#${sale.numeroVenta}`, 9),
     ...wrapLine(`Cajero: ${sale.cajero.nombre}`, TICKET_LINE_WIDTH),
   ];
 
   const totalsLines = [
-    ...formatKeyValueLine("Subtotal", formatTicketCop(sale.subtotal), 8),
-    ...formatKeyValueLine("TOTAL", formatTicketCop(sale.total), 8),
-    ...formatKeyValueLine("Pago", paymentMethodTicketLabel(sale.metodoPago), 8),
-    ...(sale.montoRecibido !== null ? formatKeyValueLine("Recibido", formatTicketCop(sale.montoRecibido), 8) : []),
-    ...(sale.cambio !== null ? formatKeyValueLine("Cambio", formatTicketCop(sale.cambio), 8) : []),
+    ...formatKeyValueLine("Subtotal", formatTicketCop(sale.subtotal), 9),
+    ...formatKeyValueLine("TOTAL", formatTicketCop(sale.total), 9),
+    ...formatKeyValueLine("Pago", paymentMethodTicketLabel(sale.metodoPago), 9),
+    ...(sale.montoRecibido !== null ? formatKeyValueLine("Recibido", formatTicketCop(sale.montoRecibido), 9) : []),
+    ...(sale.cambio !== null ? formatKeyValueLine("Cambio", formatTicketCop(sale.cambio), 9) : []),
   ];
 
   const ticketText = [
@@ -184,6 +187,7 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         overflow: hidden;
         transform: scale(1);
         zoom: 1;
+        box-sizing: border-box;
         -webkit-text-size-adjust: 100%;
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
@@ -194,13 +198,13 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       }
 
       .ticket {
-        width: 58mm;
-        min-width: 58mm;
-        max-width: 58mm;
+        width: 57.6mm;
+        min-width: 57.6mm;
+        max-width: 57.6mm;
         margin: 0;
-        padding: 0.6mm 0.6mm 0.5mm;
-        font-size: 9px;
-        line-height: 1.16;
+        padding: 0.2mm 0.2mm 0.35mm;
+        font-size: 11px;
+        line-height: 1.14;
         transform: scale(1);
         zoom: 1;
         box-sizing: border-box;
@@ -217,8 +221,9 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         word-break: normal;
         overflow-wrap: normal;
         font-family: "Courier New", Consolas, monospace;
-        font-size: 9px;
+        font-size: 11px;
         font-weight: 700;
+        letter-spacing: -0.15px;
       }
     </style>
   </head>
