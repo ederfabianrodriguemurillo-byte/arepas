@@ -30,10 +30,8 @@ type TicketSettings = {
   mensajeTicket: string;
 };
 
-const TICKET_LINE_WIDTH = 31;
-
 function separator() {
-  return "-".repeat(TICKET_LINE_WIDTH);
+  return "-".repeat(31);
 }
 
 function formatTicketCop(value: number) {
@@ -63,106 +61,32 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#39;");
 }
 
-function centerLine(value: string) {
-  const clean = value.trim();
-  if (clean.length >= TICKET_LINE_WIDTH) {
-    return clean.slice(0, TICKET_LINE_WIDTH);
-  }
-
-  const leftPad = Math.floor((TICKET_LINE_WIDTH - clean.length) / 2);
-  return `${" ".repeat(leftPad)}${clean}`;
-}
-
-function wrapLine(value: string, width = TICKET_LINE_WIDTH) {
-  const text = value.replace(/\s+/g, " ").trim();
-  if (!text) {
-    return [""];
-  }
-
-  const words = text.split(" ");
-  const lines: string[] = [];
-  let current = "";
-
-  for (const word of words) {
-    if (!current) {
-      current = word;
-      continue;
-    }
-
-    if (`${current} ${word}`.length <= width) {
-      current = `${current} ${word}`;
-      continue;
-    }
-
-    lines.push(current);
-    current = word;
-  }
-
-  if (current) {
-    lines.push(current);
-  }
-
-  return lines;
-}
-
-function formatKeyValueLine(label: string, value: string, valueWidth = 10) {
-  const safeValue = value.trim();
-  const safeLabel = label.trim();
-  const labelWidth = Math.max(1, TICKET_LINE_WIDTH - valueWidth - 1);
-  const labelLines = wrapLine(safeLabel, labelWidth);
-  const valueLines = wrapLine(safeValue, valueWidth);
-  const lineCount = Math.max(labelLines.length, valueLines.length);
-  const lines: string[] = [];
-
-  for (let index = 0; index < lineCount; index += 1) {
-    const left = (labelLines[index] || "").padEnd(labelWidth, " ");
-    const right = valueLines[index] || "";
-    lines.push(`${left} ${right.padStart(valueWidth, " ")}`);
-  }
-
-  return lines;
-}
-
 function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
-  const itemLines = sale.items.flatMap((item) => {
+  const itemsHtml = sale.items.map((item) => {
     const itemName = `${item.cantidad} x ${item.nombreProducto}${item.nombreVariante ? ` (${item.nombreVariante})` : ""}`;
-    const lines = formatKeyValueLine(itemName, formatTicketCop(item.totalLinea), 10);
+    return `
+      <div class="ticket-item">
+        <div class="ticket-line">
+          <span class="ticket-left">${escapeHtml(itemName)}</span>
+          <span class="ticket-right">${escapeHtml(formatTicketCop(item.totalLinea))}</span>
+        </div>
+        ${item.observacion ? `<div class="ticket-note">(${escapeHtml(item.observacion)})</div>` : ""}
+      </div>
+    `;
+  }).join("");
 
-    if (item.observacion) {
-      lines.push(...wrapLine(`Obs: ${item.observacion}`, TICKET_LINE_WIDTH));
-    }
-
-    return lines;
-  });
-
-  const footerMessageLines = wrapLine(settings.mensajeTicket, TICKET_LINE_WIDTH).map(centerLine);
-  const detailLines = [
-    ...wrapLine(settings.direccion, TICKET_LINE_WIDTH),
-    ...wrapLine(settings.telefono, TICKET_LINE_WIDTH),
-    ...wrapLine(formatDateTime(sale.fecha), TICKET_LINE_WIDTH),
-    ...formatKeyValueLine("Venta", `#${sale.numeroVenta}`, 10),
-    ...wrapLine(`Cajero: ${sale.cajero.nombre}`, TICKET_LINE_WIDTH),
-  ];
-
-  const totalsLines = [
-    ...formatKeyValueLine("Subtotal", formatTicketCop(sale.subtotal), 10),
-    ...formatKeyValueLine("TOTAL", formatTicketCop(sale.total), 10),
-    ...formatKeyValueLine("Pago", paymentMethodTicketLabel(sale.metodoPago), 10),
-    ...(sale.montoRecibido !== null ? formatKeyValueLine("Recibido", formatTicketCop(sale.montoRecibido), 10) : []),
-    ...(sale.cambio !== null ? formatKeyValueLine("Cambio", formatTicketCop(sale.cambio), 10) : []),
-  ];
-
-  const ticketText = [
-    centerLine(settings.nombreNegocio),
-    separator(),
-    ...detailLines,
-    separator(),
-    ...itemLines,
-    separator(),
-    ...totalsLines,
-    separator(),
-    ...footerMessageLines,
-  ].join("\n");
+  const summaryRows = [
+    { label: "Subtotal", value: formatTicketCop(sale.subtotal), strong: false },
+    { label: "TOTAL", value: formatTicketCop(sale.total), strong: true },
+    { label: "Pago", value: paymentMethodTicketLabel(sale.metodoPago), strong: false },
+    ...(sale.montoRecibido !== null ? [{ label: "Recibido", value: formatTicketCop(sale.montoRecibido), strong: false }] : []),
+    ...(sale.cambio !== null ? [{ label: "Cambio", value: formatTicketCop(sale.cambio), strong: false }] : []),
+  ].map((row) => `
+      <div class="ticket-line ${row.strong ? "ticket-total" : ""}">
+        <span class="ticket-left">${escapeHtml(row.label)}</span>
+        <span class="ticket-right">${escapeHtml(row.value)}</span>
+      </div>
+    `).join("");
 
   return `<!doctype html>
 <html lang="es">
@@ -206,26 +130,113 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         box-sizing: border-box;
       }
 
-      p,
-      pre {
+      p {
         margin: 0;
       }
 
-      .ticket-text {
+      .ticket-header,
+      .ticket-footer {
+        text-align: center;
+      }
+
+      .ticket-business-name {
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .ticket-phone,
+      .ticket-date {
+        font-size: 9px;
+      }
+
+      .ticket-divider {
         width: 100%;
-        white-space: pre-wrap;
-        word-break: normal;
-        overflow-wrap: normal;
+        margin: 1mm 0 0.6mm;
         font-family: "Courier New", Consolas, monospace;
         font-size: 10px;
         font-weight: 700;
         letter-spacing: -0.1px;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      .ticket-section {
+        margin-top: 0.5mm;
+      }
+
+      .ticket-line {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        column-gap: 1.2mm;
+        align-items: start;
+        width: 100%;
+      }
+
+      .ticket-left {
+        min-width: 0;
+        word-break: break-word;
+      }
+
+      .ticket-right {
+        white-space: nowrap;
+        text-align: right;
+        justify-self: end;
+      }
+
+      .ticket-item {
+        margin-top: 0.7mm;
+      }
+
+      .ticket-item:first-child {
+        margin-top: 0;
+      }
+
+      .ticket-note {
+        margin-top: 0.2mm;
+        padding-left: 1.5mm;
+        font-size: 9px;
+      }
+
+      .ticket-total {
+        font-weight: 700;
       }
     </style>
   </head>
   <body>
     <main class="ticket">
-      <pre class="ticket-text">${escapeHtml(ticketText)}</pre>
+      <header class="ticket-header">
+        <p class="ticket-business-name">${escapeHtml(settings.nombreNegocio)}</p>
+        <p>${escapeHtml(settings.direccion)}</p>
+        <p class="ticket-phone">${escapeHtml(settings.telefono)}</p>
+      </header>
+
+      <p class="ticket-divider">${separator()}</p>
+
+      <section class="ticket-section">
+        <div class="ticket-line">
+          <span class="ticket-left">Venta #${sale.numeroVenta}</span>
+          <span class="ticket-right">${escapeHtml(formatDateTime(sale.fecha))}</span>
+        </div>
+        <p>Cajero: ${escapeHtml(sale.cajero.nombre)}</p>
+      </section>
+
+      <p class="ticket-divider">${separator()}</p>
+
+      <section class="ticket-section">
+        ${itemsHtml}
+      </section>
+
+      <p class="ticket-divider">${separator()}</p>
+
+      <section class="ticket-section">
+        ${summaryRows}
+      </section>
+
+      <p class="ticket-divider">${separator()}</p>
+
+      <footer class="ticket-footer">
+        <p>${escapeHtml(settings.mensajeTicket)}</p>
+      </footer>
     </main>
     <script>
       window.addEventListener("load", () => {
