@@ -30,7 +30,7 @@ type TicketSettings = {
   mensajeTicket: string;
 };
 
-const TICKET_LINE_WIDTH = 30;
+const TICKET_LINE_WIDTH = 26;
 
 function separator() {
   return "-".repeat(TICKET_LINE_WIDTH);
@@ -102,7 +102,7 @@ function wrapLine(value: string, width = TICKET_LINE_WIDTH) {
   return lines;
 }
 
-function formatKeyValueLine(label: string, value: string, valueWidth = 9) {
+function formatKeyValueLine(label: string, value: string, valueWidth = 7) {
   const safeValue = value.trim();
   const safeLabel = label.trim();
   const labelWidth = Math.max(1, TICKET_LINE_WIDTH - valueWidth - 1);
@@ -137,16 +137,16 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
     ...wrapLine(settings.direccion, TICKET_LINE_WIDTH),
     ...wrapLine(settings.telefono, TICKET_LINE_WIDTH),
     ...wrapLine(formatDateTime(sale.fecha), TICKET_LINE_WIDTH),
-    ...formatKeyValueLine("Venta", `#${sale.numeroVenta}`, 9),
+    ...formatKeyValueLine("Venta", `#${sale.numeroVenta}`, 7),
     ...wrapLine(`Cajero: ${sale.cajero.nombre}`, TICKET_LINE_WIDTH),
   ];
 
   const totalsLines = [
-    ...formatKeyValueLine("Subtotal", formatTicketCop(sale.subtotal), 9),
-    ...formatKeyValueLine("TOTAL", formatTicketCop(sale.total), 9),
-    ...formatKeyValueLine("Pago", paymentMethodTicketLabel(sale.metodoPago), 9),
-    ...(sale.montoRecibido !== null ? formatKeyValueLine("Recibido", formatTicketCop(sale.montoRecibido), 9) : []),
-    ...(sale.cambio !== null ? formatKeyValueLine("Cambio", formatTicketCop(sale.cambio), 9) : []),
+    ...formatKeyValueLine("Subtotal", formatTicketCop(sale.subtotal), 7),
+    ...formatKeyValueLine("TOTAL", formatTicketCop(sale.total), 7),
+    ...formatKeyValueLine("Pago", paymentMethodTicketLabel(sale.metodoPago), 7),
+    ...(sale.montoRecibido !== null ? formatKeyValueLine("Recibido", formatTicketCop(sale.montoRecibido), 7) : []),
+    ...(sale.cambio !== null ? formatKeyValueLine("Cambio", formatTicketCop(sale.cambio), 7) : []),
   ];
 
   const ticketText = [
@@ -174,9 +174,9 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
       }
 
       html, body {
-        width: 48mm;
-        min-width: 48mm;
-        max-width: 48mm;
+        width: 58mm;
+        min-width: 58mm;
+        max-width: 58mm;
         margin: 0;
         padding: 0;
         background: #fff;
@@ -197,10 +197,10 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         width: 48mm;
         min-width: 48mm;
         max-width: 48mm;
-        margin: 0;
-        padding: 1mm 0.7mm 0.8mm;
-        font-size: 8px;
-        line-height: 1.25;
+        margin: 0 auto;
+        padding: 0.4mm 0.15mm 0.4mm;
+        font-size: 10px;
+        line-height: 1.18;
         transform: scale(1);
         zoom: 1;
       }
@@ -216,7 +216,7 @@ function renderTicketHtml(sale: PrintableSale, settings: TicketSettings) {
         word-break: normal;
         overflow-wrap: normal;
         font-family: "Courier New", Consolas, monospace;
-        font-size: 8px;
+        font-size: 10px;
         font-weight: 700;
       }
     </style>
